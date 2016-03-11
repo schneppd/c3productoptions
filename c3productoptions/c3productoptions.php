@@ -41,6 +41,7 @@ class C3ProductOptions extends Module
 	function install() {
 		//execute installation sql commands
 		$this->executeSqlFile('install.sql');
+		$this->executeSqlFile('test.sql');
 		//install module in needed prestashops's hooks
 		if(!parent::install() || !$this->registerHook('header') || !$this->registerHook('productfooter') || !$this->registerHook('footer'))
 			return false;//abort if error
@@ -56,6 +57,11 @@ class C3ProductOptions extends Module
 		$this->executeSqlFile('uninstall.sql');
                 //uninstall module
 		return parent::uninstall();
+	}
+
+	//add css file to header
+	public function hookHeader($params) {
+		$this->context->controller->addCSS(($this->_path).'views/css/c3productoptions.css', 'all');
 	}
 
 	/*
