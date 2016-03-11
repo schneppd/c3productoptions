@@ -59,11 +59,6 @@ class C3ProductOptions extends Module
 		return parent::uninstall();
 	}
 
-	//add css file to header
-	public function hookHeader($params) {
-		$this->context->controller->addCSS(($this->_path).'views/css/c3productoptions.css', 'all');
-	}
-
 	/*
 	* read the content of given file and executes it
 	* return true if no error, or else if something went wrong
@@ -88,6 +83,16 @@ class C3ProductOptions extends Module
 		return true;//success
 	}
 
+	//add css file to header
+	public function hookHeader($params) {
+		$this->context->controller->addCSS(($this->_path).'views/css/c3productoptions.css', 'all');
+	}
+	//add block in footer
+	public function hookFooter(){
 
-
+	}
+	//Add block under the product description
+	public function hookProductFooter($params){
+	
+	}
 }
