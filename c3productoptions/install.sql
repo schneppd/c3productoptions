@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS PREFIX_c3_option (
 CREATE TABLE IF NOT EXISTS PREFIX_c3_option_lang (
  id_option int(10) unsigned NOT NULL
  ,id_lang int(10) unsigned NOT NULL
- ,public_name TEXT  NOT NULL
+ ,public_name TEXT NOT NULL
+ ,required boolean NOT NULL DEFAULT true
  ,PRIMARY KEY (id_option,id_lang)
  ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES PREFIX_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
  ,CONSTRAINT FOREIGN KEY (id_lang) REFERENCES PREFIX_lang (id_lang) ON DELETE CASCADE ON UPDATE CASCADE
