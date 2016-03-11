@@ -1,53 +1,53 @@
-CREATE TABLE IF NOT EXISTS ps_c3_option (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option (
  id_option int(10) unsigned NOT NULL AUTO_INCREMENT,
  option_type enum('select','radio','checkbox','text') NOT NULL DEFAULT 'select',
  name TEXT  NOT NULL,
  PRIMARY KEY (id_option)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_option_lang (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option_lang (
  id_option int(10) unsigned NOT NULL
  ,id_lang int(10) unsigned NOT NULL
  ,public_name TEXT  NOT NULL
  ,PRIMARY KEY (id_option,id_lang)
- ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES ps_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_lang) REFERENCES ps_lang (id_lang) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES PREFIX_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_lang) REFERENCES PREFIX_lang (id_lang) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_option_shop (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option_shop (
  id_option int(10) unsigned NOT NULL
  ,id_shop int(10) unsigned NOT NULL
  ,PRIMARY KEY (id_option,id_shop)
- ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES ps_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES ps_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES PREFIX_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES PREFIX_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 
-CREATE TABLE IF NOT EXISTS ps_c3_option_value (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option_value (
  id_option_value int(10) unsigned NOT NULL AUTO_INCREMENT,
  name TEXT  NOT NULL,
  PRIMARY KEY (id_option_value)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_option_value_lang (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option_value_lang (
  id_option_value int(10) unsigned NOT NULL
  ,id_lang int(10) unsigned NOT NULL
  ,public_name TEXT  NOT NULL
  ,PRIMARY KEY (id_option_value,id_lang)
- ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES ps_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_lang) REFERENCES ps_lang (id_lang) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES PREFIX_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_lang) REFERENCES PREFIX_lang (id_lang) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_option_value_shop (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_option_value_shop (
  id_option_value int(10) unsigned NOT NULL
  ,id_shop int(10) unsigned NOT NULL
  ,PRIMARY KEY (id_option_value,id_shop)
- ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES ps_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES ps_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES PREFIX_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES PREFIX_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_product_option_value (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_product_option_value (
  id_product int(10) unsigned NOT NULL
  ,id_option int(10) unsigned NOT NULL
  ,id_option_value int(10) unsigned NOT NULL
@@ -61,20 +61,20 @@ CREATE TABLE IF NOT EXISTS ps_c3_product_option_value (
  , minimal_quantity TINYINT(10) NOT NULL DEFAULT 1
  , available_date date NOT NULL DEFAULT '0000-00-00'
  ,PRIMARY KEY (id_product,id_option,id_option_value)
- ,CONSTRAINT FOREIGN KEY (id_product) REFERENCES ps_product (id_product) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES ps_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES ps_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_product) REFERENCES PREFIX_product (id_product) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES PREFIX_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES PREFIX_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS ps_c3_product_option_value_shop (
+CREATE TABLE IF NOT EXISTS PREFIX_c3_product_option_value_shop (
  id_product int(10) unsigned NOT NULL
  ,id_option int(10) unsigned NOT NULL
  ,id_option_value int(10) unsigned NOT NULL
  ,id_shop int(10) unsigned NOT NULL
  ,PRIMARY KEY (id_product,id_option,id_option_value,id_shop)
- ,CONSTRAINT FOREIGN KEY (id_product) REFERENCES ps_product (id_product) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES ps_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES ps_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES ps_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
- ,CONSTRAINT FOREIGN KEY (id_product,id_option,id_option_value) REFERENCES ps_c3_product_option_value (id_product,id_option,id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_product) REFERENCES PREFIX_product (id_product) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option) REFERENCES PREFIX_c3_option (id_option) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_option_value) REFERENCES PREFIX_c3_option_value (id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_shop) REFERENCES PREFIX_shop (id_shop) ON DELETE CASCADE ON UPDATE CASCADE
+ ,CONSTRAINT FOREIGN KEY (id_product,id_option,id_option_value) REFERENCES PREFIX_c3_product_option_value (id_product,id_option,id_option_value) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
