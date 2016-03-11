@@ -39,7 +39,27 @@ class C3ProductOptions extends Module
 
 	//steps to execute when the module is installed
 	function install() {
-		//install module
+		/*
+		* execute install.sql
+		*/
+		//sql install file
+		$sql_install_path = dirname(__FILE__) . '/install.sql';
+		//read sql to execute when install
+		if (!file_exists($sql_install_path))
+			return false;
+		//get file content in $sql
+		else if (!$sql = file_get_contents($sql_install_path))
+			return false;
+		//replace dummy prefix with prestashop's prefix
+		$sql = str_replace('PREFIX_', _DB_PREFIX_, $sql);
+		//splite sql commands on ;
+		$sql = preg_split("/;\s*[\r\n]+/", $sql);
+		foreach ($sql as $query){
+			if($sql != ''){
+				if (!Db::getInstance()->Execute(trim($query))) return (false);
+			}
+		}
+		//install module in prestashops's hooks
 		$success = (parent::install()
 		);
 		return $success;
