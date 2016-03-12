@@ -40,12 +40,11 @@ class C3ProductOptions extends Module
 	//steps to execute when the module is installed
 	function install() {
 		//execute installation sql commands
-		$this->executeSqlFile('install.sql');
-		$this->executeSqlFile('test.sql');
+		if(!$this->executeSqlFile('install.sql')) return false;
+		if(!$this->executeSqlFile('test.sql')) return false;
 		//install module in needed prestashops's hooks
-		if(!parent::install() || !$this->registerHook('header') || !$this->registerHook('productfooter') || !$this->registerHook('footer'))
+		if(!parent::install() || !$this->registerHook('header') || !$this->registerHook('productfooter') || !$this->registerHook('footer') || !Configuration::updateValue('C3PRODUCTOPTIONS_RESET', false))
 			return false;//abort if error
-		);
 		return true;//install success
 	}
 
@@ -73,9 +72,13 @@ class C3ProductOptions extends Module
 			return false;//abort
 		//replace dummy PREFIX_ with prestashop's prefix value
 		$sql = str_replace('PREFIX_', _DB_PREFIX_, $sql);
+		$sql = str_replace("\r", '', $sql);
+		$sql = str_replace("\n", '', $sql);
 		//splite sql commands on each ";"
-		$sql = preg_split("/;\s*[\r\n]+/", $sql);
+		//$sql = preg_split("/;\s*[\r\n]+/", $sql);
+		$sql = explode("/;", $sql);
 		foreach ($sql as $query){
+			error_log("sql dir: $query");
 			if($sql != ''){
 				if (!Db::getInstance()->Execute(trim($query))) return false;//abort if sql error
 			}
@@ -89,10 +92,98 @@ class C3ProductOptions extends Module
 	}
 	//add block in footer
 	public function hookFooter(){
-
+		return $this->display(__FILE__, 'views/templates/front/footer.tpl');
 	}
 	//Add block under the product description
 	public function hookProductFooter($params){
-	
+		$id_category = (int)(Tools::getValue('id_category'));
+		$cacheId = 'c3keywords_'.$id_category;
+		$res =  $this->display(__FILE__, 'views/templates/front/c3productoptions.tpl', $this->getCacheId($cacheId));
+		return trim($res);
 	}
+
+	//backend form checks
+	public function getContent() {
+                $output = '';
+                $errors = array();
+                if (Tools::isSubmit('submitC3ProductOptions')) {
+	                //check if C3PRODUCTOPTIONS_RESET was provided
+                        $c3po_reset = Tools::getValue('C3PRODUCTOPTIONS_RESET');
+                        if (!strlen($c3po_reset))
+                        	$errors[] = $this->l('Please complete the data reset field.');
+                        elseif (!Validate::isBool($c3po_reset))
+                        	$errors[] = $this->l('Invalid value for data reset. It has to be a boolean.');
+	                //if errors, display error messages
+                        if (count($errors))
+                                $output = $this->displayError(implode('<br />', $errors));
+                        else {
+                                //update module values
+                                Configuration::updateValue('C3PRODUCTOPTIONS_RESET', (bool)$c3po_reset);
+
+                                $output = $this->displayConfirmation($this->l('Settings updated'));
+                        }
+                }
+                return $output.$this->renderForm();
+        }
+	//backend form creation
+	public function renderForm() {
+		//setup form fields
+		$fields_form = array(
+			'form' => array(
+				'legend' => array(
+					'title' => $this->l('Settings'),
+					'icon' => 'icon-cogs'
+				),
+				'input' => array(
+                                        array(
+                                        	'type' => 'switch',
+                                        	'label' => $this->l('Reset data'),
+                                        	'name' => 'C3PRODUCTOPTIONS_RESET',
+                                        	'class' => 'fixed-width-xs',
+                                        	'desc' => $this->l('If enabled, reset caches.'),
+                                        	'values' => array(
+                                        		array(
+                                        			'id' => 'active_on',
+                                        			'value' => 1,
+                                        			'label' => $this->l('Enabled')
+                                        			),
+                                        		array(
+                                        			'id' => 'active_off',
+                                        			'value' => 0,
+                                        			'label' => $this->l('Disabled')
+                                        		)
+                                        	)
+                                        )
+				),
+				'submit' => array(
+					'title' => $this->l('Save'),
+				)
+			),
+		);
+		//setup form infos
+		$helper = new HelperForm();
+		$helper->show_toolbar = false;
+		$helper->table = $this->table;
+		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
+		$helper->default_form_language = $lang->id;
+		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+		$helper->identifier = $this->identifier;
+		$helper->submit_action = 'submitC3ProductOptions';
+		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&c3productoptions_module='.$this->tab.'&module_name='.$this->name;
+		$helper->token = Tools::getAdminTokenLite('AdminModules');
+		$helper->tpl_vars = array(
+			'fields_value' => $this->getConfigFieldsValues(),
+			'languages' => $this->context->controller->getLanguages(),
+			'id_language' => $this->context->language->id
+		);
+		//generate form
+		return $helper->generateForm(array($fields_form));
+	}
+	//output config fields to array
+	public function getConfigFieldsValues()	{
+		return array(
+			'C3PRODUCTOPTIONS_RESET' => Tools::getValue('C3PRODUCTOPTIONS_RESET', (bool)Configuration::get('C3PRODUCTOPTIONS_RESET')),
+		);
+	}
+
 }
