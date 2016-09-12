@@ -1,0 +1,6 @@
+/* C3productoptions module */
+.c3_missing_option:before{
+	content:"* ";
+	color: red;
+}
+
