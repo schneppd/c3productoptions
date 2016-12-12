@@ -1,3 +1,5 @@
+DROP VIEW PREFIX_vc3_product_min_option_price;
+DROP VIEW PREFIX_vc3_product_min_option_prices;
 DROP VIEW PREFIX_vc3_product_option_description;
 DROP VIEW PREFIX_vc3_product_option;
 DROP VIEW PREFIX_vc3_product_option_value;

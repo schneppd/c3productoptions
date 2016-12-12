@@ -76,3 +76,14 @@ CREATE OR REPLACE VIEW `PREFIX_vc3_product_option_description` AS SELECT DISTINC
  INNER JOIN `PREFIX_attribute_lang` AS al ON (al.id_attribute = a.id_attribute)
  ORDER BY id_attribute_group, id_attribute
 ;
+CREATE OR REPLACE VIEW `PREFIX_vc3_product_min_option_prices` AS SELECT 
+ pov.id_product AS id_product, pov.id_attribute_group AS id_attribute_group, MIN(pov.price) AS price
+ FROM 
+ PREFIX_c3_product_option_value AS pov
+ GROUP BY id_product, pov.id_attribute_group
+ ;
+CREATE OR REPLACE VIEW `PREFIX_vc3_product_min_option_price` AS SELECT 
+ dt.id_product AS id_product, SUM(dt.price) AS price
+ FROM PREFIX_vc3_product_min_option_prices AS dt
+ GROUP BY dt.id_product
+ ;
