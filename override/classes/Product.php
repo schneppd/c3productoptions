@@ -65,7 +65,20 @@ class Product extends ProductCore
 		$sql->where('id_shop = '.(int)$id_shop);
 		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
 	}
-
+	/*
+	* module: c3productoptions
+	* date: 2016-07-11 01:38:57
+	* version: 1.0.0
+	 * return true if the given product id is managed by old prestashop logic
+	*/
+	public static function c3GetProductManagedByC3Module($id_product){
+		//get ecotax
+		$sql = new DbQuery();
+		$sql->select('COUNT(id_product_attribute)');
+		$sql->from('product_attribute');
+		$sql->where('id_product = '.(int)$id_product);
+		return (int)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql) == 0;
+	}
 
 	/*
 	* module: c3productoptions
@@ -290,20 +303,37 @@ class Product extends ProductCore
 		
 		return false;
 	}
+	/*
+	 * used to allow add / remove 1 more product directly from cart
+	 */
+	public static function c3hasPreviousOptionCustomization($id_product, $context)
+	{
+		$sql = new DbQuery();
+		$sql->select('COUNT(*)');
+		$sql->from('cart_product');
+		$sql->where('id_product = '.$id_product);
+		$sql->where('id_cart = '.(int)$context->cart->id);
+
+		$count = (int)Db::getInstance()->getValue($sql);
+
+		if($count > 0)
+			return true;
+
+		return false;
+	}
+
 	//get minimal options combination price, without tax
 	public static function c3GetProductMinOptionsPrice($id_product)
 	{
 
 		$sql = new DbQuery();
-		$sql->from('c3_product_option', 'po');
-		$sql->select('po.id_attribute_group, MIN(pov.price) AS min_price');
-		$sql->innerJoin('c3_product_option_value', 'pov', 'pov.id_product = po.id_product AND pov.id_attribute_group = po.id_attribute_group');
-		$sql->where('po.required_option = '.true);
-		$sql->groupBy('po.id_attribute_group');
+		$sql->select('price');
+		$sql->from('vc3_product_min_option_price');
+		$sql->where('id_product = '.$id_product);
 		$min_options = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
-		$raw_price_min_required = 0.0;
+		$raw_price_min_required = 0;
 		foreach ($min_options as $data_option)
-			$raw_price_min_required += (float)$data_option['min_price'];
+			$raw_price_min_required += (float)$data_option['price'];
 		
 		return $raw_price_min_required;
 	}
@@ -440,40 +470,163 @@ class Product extends ProductCore
 	*/
 	public function c3HasAllRequiredCustomizableFields($id_product, $c3_combination_data, Context $context = null)
 	{
-		//exemple valid value for $c3_combination_data: 123-14582_124-14589[[[text given by user]]]_129-14256 
-		if (!$context)
-			$context = Context::getContext();
-		$id_product = (int)$id_product;
-		if(!Product::c3HasOptions($id_product) && $c3_combination_data == "")
-			return true;
-		$c3_combination_data_sanitized = Product::c3SanitizeCombinationData($c3_combination_data);
-		if($c3_combination_data_sanitized == 'invalid')
-			return false;
-		if(!preg_match('/^[\d-_]+$/', $c3_combination_data_sanitized))
-			return false;
+		//validate if product managed by old prestashop logic
+		if(Product::c3GetProductManagedByC3Module($id_product)) {
+			//exemple valid value for $c3_combination_data: 123-14582_124-14589[[[text given by user]]]_129-14256
+			if (!$context)
+				$context = Context::getContext();
+			$id_product = (int)$id_product;
+			if (!Product::c3HasOptions($id_product) && $c3_combination_data == "")
+				return true;
+			if (Product::c3hasPreviousOptionCustomization($id_product, $context) && $c3_combination_data == "")//user add product from cart form
+				return true;
+			$c3_combination_data_sanitized = Product::c3SanitizeCombinationData($c3_combination_data);
+			if ($c3_combination_data_sanitized == 'invalid')
+				return false;
+			if (!preg_match('/^[\d-_]+$/', $c3_combination_data_sanitized))
+				return false;
 
-		$processed_combination_data;
-		preg_match_all('/((\d+)-(\d+))/', $c3_combination_data_sanitized, $processed_combination_data);
+			$processed_combination_data;
+			preg_match_all('/((\d+)-(\d+))/', $c3_combination_data_sanitized, $processed_combination_data);
 
-		$notInAttributeGroup = '';
+			$selectedIdAttributeGroups = '';
+			$selectedIdAttributes = '';
+			foreach ($processed_combination_data[0] as $key => $part) {
+				$id_attribute_group = (int)$processed_combination_data[2][$key];
+				$id_attribute = (int)$processed_combination_data[3][$key];
+				if ($key > 0) {
+					$selectedIdAttributeGroups .= ',';
+					$selectedIdAttributes .= ',';
+				}
+				$selectedIdAttributeGroups .= (string)$id_attribute_group;
+				$selectedIdAttributes .= (string)$id_attribute;
+			}
 
-		foreach ($processed_combination_data[0] as $key => $part) {
-			$id_attribute_group = (int)$processed_combination_data[2][$key];
-			if($key > 0)
-				$notInAttributeGroup .= ',';
-			$notInAttributeGroup .= (string)$id_attribute_group;
+
+			if (Product::c3hasMissingRequiredOptions($id_product, $selectedIdAttributeGroups))
+				return false;
+			if (Product::c3hasPartOfSelectionUnavailable($id_product, $selectedIdAttributes))
+				return false;
 		}
-		$sql = new DbQuery();
-		$sql->from('c3_product_option', 'po');
-		$sql->select('COUNT(*)');
-		$sql->where('po.`id_product` = '.(int)$this->id);
-		$sql->where('po.id_attribute_group NOT IN('.$notInAttributeGroup.')');
-		$sql->where('po.`required_option` = '.(bool)true);
-		$count = (int)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
-		if($count > 0)
-			return false;
 
 		return true;
 	}
 
+	public static function c3hasPartOfSelectionUnavailable($id_product, $selectedIdAttributes)
+	{
+		$sql = new DbQuery();
+		$sql->from('c3_product_option_value', 'po');
+		$sql->select('COUNT(*)');
+		$sql->where('po.`id_product` = ' . $id_product);
+		$sql->where('po.id_attribute IN(' . $selectedIdAttributes . ')');
+		$sql->where('po.`available_option` = 0');
+		$count = (int)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+		return ($count > 0);
+	}
+
+	public static function c3hasMissingRequiredOptions($id_product, $selectedIdAttributeGroups)
+	{
+		$sql = new DbQuery();
+		$sql->from('c3_product_option', 'po');
+		$sql->select('COUNT(*)');
+		$sql->where('po.`id_product` = ' . $id_product);
+		$sql->where('po.id_attribute_group NOT IN(' . $selectedIdAttributeGroups . ')');
+		$sql->where('po.`required_option` = 1');
+		$count = (int)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+		return ($count > 0);
+	}
+
+	/**
+	* Get a random special
+	* changed for better performance with huge amount of products
+	*
+	* module: c3productoptions
+	* date: 2016-06-22 01:38:57
+	* @param integer $id_lang Language id
+	* @return array Special
+	*/
+	public static function getRandomSpecial($id_lang, $beginning = false, $ending = false, Context $context = null)
+	{
+		if (!$context)
+			$context = Context::getContext();
+
+		$front = true;
+		if (!in_array($context->controller->controller_type, array('front', 'modulefront')))
+			$front = false;
+
+		$current_date = date('Y-m-d H:i:s');
+		$product_reductions = Product::_getProductIdByDate((!$beginning ? $current_date : $beginning), (!$ending ? $current_date : $ending), $context, true);
+
+		if ($product_reductions)
+		{
+			
+			$ids_product = ' AND product_shop.`id_product` IN (';
+			$nb_products_query = count($product_reductions);
+			$index_product = 1;
+			foreach ($product_reductions as $product_reduction){
+				$ids_product .= ''.(int)$product_reduction['id_product'];
+				$index_product++;
+				if($index_product < $nb_products_query)
+					$ids_product .= ', ';
+			}
+			$ids_product .= ')';
+			
+
+			$groups = FrontController::getCurrentCustomerGroups();
+			$sql_groups = (count($groups) ? 'IN ('.implode(',', $groups).')' : '= 1');
+
+			// Please keep 2 distinct queries because RAND() is an awful way to achieve this result
+			$sql = 'SELECT product_shop.id_product, MAX(product_attribute_shop.id_product_attribute) id_product_attribute
+					FROM `'._DB_PREFIX_.'product` p
+					'.Shop::addSqlAssociation('product', 'p').'
+					LEFT JOIN  `'._DB_PREFIX_.'product_attribute` pa ON (product_shop.id_product = pa.id_product)
+					'.Shop::addSqlAssociation('product_attribute', 'pa', false, 'product_attribute_shop.default_on = 1').'
+					WHERE product_shop.`active` = 1
+						'.(($ids_product) ? $ids_product : '').'
+						AND p.`id_product` IN (
+							SELECT cp.`id_product`
+							FROM `'._DB_PREFIX_.'category_group` cg
+							LEFT JOIN `'._DB_PREFIX_.'category_product` cp ON (cp.`id_category` = cg.`id_category`)
+							WHERE cg.`id_group` '.$sql_groups.'
+						)
+					'.($front ? ' AND product_shop.`visibility` IN ("both", "catalog")' : '').'
+					GROUP BY product_shop.id_product
+					ORDER BY RAND()';
+
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
+
+			if (!$id_product = $result['id_product'])
+				return false;
+
+			$sql = 'SELECT p.*, product_shop.*, stock.`out_of_stock` out_of_stock, pl.`description`, pl.`description_short`,
+						pl.`link_rewrite`, pl.`meta_description`, pl.`meta_keywords`, pl.`meta_title`, pl.`name`, pl.`available_now`, pl.`available_later`,
+						p.`ean13`, p.`upc`, MAX(image_shop.`id_image`) id_image, il.`legend`,
+						DATEDIFF(product_shop.`date_add`, DATE_SUB(NOW(),
+						INTERVAL '.(Validate::isUnsignedInt(Configuration::get('PS_NB_DAYS_NEW_PRODUCT')) ? Configuration::get('PS_NB_DAYS_NEW_PRODUCT') : 20).'
+							DAY)) > 0 AS new
+					FROM `'._DB_PREFIX_.'product` p
+					LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (
+						p.`id_product` = pl.`id_product`
+						AND pl.`id_lang` = '.(int)$id_lang.Shop::addSqlRestrictionOnLang('pl').'
+					)
+					'.Shop::addSqlAssociation('product', 'p').'
+					LEFT JOIN `'._DB_PREFIX_.'image` i ON (i.`id_product` = p.`id_product`)'.
+					Shop::addSqlAssociation('image', 'i', false, 'image_shop.cover=1').'
+					LEFT JOIN `'._DB_PREFIX_.'image_lang` il ON (i.`id_image` = il.`id_image` AND il.`id_lang` = '.(int)$id_lang.')
+					'.Product::sqlStock('p', 0).'
+					WHERE p.id_product = '.(int)$id_product.'
+					GROUP BY product_shop.id_product';
+
+			$row = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
+			if (!$row)
+				return false;
+
+			if ($result['id_product_attribute'])
+				$row['id_product_attribute'] = $result['id_product_attribute'];
+			return Product::getProductProperties($id_lang, $row);
+		}
+		else
+			return false;
+	}
+	
 }

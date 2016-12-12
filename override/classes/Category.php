@@ -140,18 +140,20 @@ class Category extends CategoryCore
 			LIMIT '.(((int)$p - 1) * (int)$n).','.(int)$n;
 
 		$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+		
 		if ($order_by == 'orderprice')
 			Tools::orderbyPrice($result, $order_way);
 
 		if (!$result)
 			return array();
 		//c3 correct products with options, price = base_price + min required options prices
-		foreach ($result as $row){
+		foreach ($result as &$row){
 			$id_product = (int)$row['id_product'];
 			if(Product::c3HasOptions($id_product)){
 				$row['price'] = (float)$row['price'] + Product::c3GetProductMinOptionsPrice($id_product);
 			}
 		}
+		
 		/* Modify SQL result */
 		return Product::getProductsProperties($id_lang, $result);
 	}

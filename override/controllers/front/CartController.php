@@ -117,11 +117,13 @@ protected  $c3_combination_data;
 				if ($this->context->cart->id)
 					$this->context->cookie->id_cart = (int)$this->context->cart->id;
 			}
-
 			// Check customizable fields
-			if ((!$product->hasAllRequiredCustomizableFields() || !$product->c3HasAllRequiredCustomizableFields($this->id_product, $this->c3_combination_data)) && !$this->customization_id)
+			if (
+				(!$product->hasAllRequiredCustomizableFields()
+					|| !$product->c3HasAllRequiredCustomizableFields($this->id_product, $this->c3_combination_data))
+				&& !$this->customization_id
+			)
 				$this->errors[] = Tools::displayError('Please fill in all of the required fields, and then save your customizations.', !Tools::getValue('ajax'));
-
 			if (!$this->errors)
 			{
 				$cart_rules = $this->context->cart->getCartRules();
