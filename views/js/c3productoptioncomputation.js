@@ -102,10 +102,7 @@ function C3_processProductOptionData(){
 			var quantityAvailableCap = 500;
 			if (quantityAvailable > 0)
 				quantityAvailableCap = quantityAvailable;
-			if (!isNaN(currentVal) && currentVal < quantityAvailableCap)
-				$('#quantity_wanted').val(currentVal + 1);
-			else
-				$('#quantity_wanted').val(quantityAvailableCap);
+
 			C3_productOptionSelectionChanged();
 		});
 		// The button to decrement the product value
@@ -113,10 +110,7 @@ function C3_processProductOptionData(){
 			e.preventDefault();//prevent default theme computations
 			fieldName = $(this).data('field-qty');
 			var currentVal = parseInt($('#quantity_wanted').val());
-			if (!isNaN(currentVal) && currentVal > 1)
-				$('#quantity_wanted').val(currentVal - 1).trigger('keyup');
-			else
-				$('#quantity_wanted').val(1);
+
 			C3_productOptionSelectionChanged();
 		});
 		//check availability / price for selected value when page has finished to load
@@ -244,8 +238,10 @@ function C3_showProductSelectionIsAvailable(){
 			window.alert(error);
 		}
 	});
+
 	if($("#add_to_cart").is(':animated'))
 		$("#add_to_cart").stop().animate({opacity:'100'});//disable default theme function
+
 	if($("#availability_statut").is(':animated'))
 		$("#availability_statut").stop().animate({opacity:'100'});//disable default theme function
 	if($("#last_quantities").is(':animated'))

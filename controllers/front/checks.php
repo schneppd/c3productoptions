@@ -42,7 +42,11 @@ class C3ProductOptionsChecksModuleFrontController extends ModuleFrontController 
 		$id_product = (int)$id_product;
 		$combination_data = (string)$combination_data;
 
+		
 		if($id_product > 0){
+			$dbPrestashop = new PDO('mysql:host='._DB_SERVER_.';dbname='._DB_NAME_, _DB_USER_, _DB_PASSWD_, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8'"));
+		
+		
 			$id_shop = $this->context->shop->id;
 			$sql = new DbQuery();
 			$sql->select('out_of_stock, quantity');
@@ -53,12 +57,89 @@ class C3ProductOptionsChecksModuleFrontController extends ModuleFrontController 
 			$out_of_stock = (int)$stocks['out_of_stock'];
 			if($out_of_stock == 2){//available
 				$product_quantity = (int)$stocks['quantity'];
-				if($quantity <= $product_quantity)//can fulfill the order
-					$res['available'] = 1;
+				if($quantity <= $product_quantity){
+					//can fulfill the order
+					$optionsRawData = explode('_', $combination_data);
+
+					if(count($optionsRawData) == 0 || $optionsRawData == false)
+						$this->reportUserHackTry('bad combination data');
+					//process data and get attributs
+					$options = [];
+					foreach ($optionsRawData as $option){
+						$optionData = explode('-', $option);
+
+						if(count($optionData) != 2 || $optionData == false)
+							$this->reportUserHackTry('bad option_value text data');
+						
+						if(!is_numeric($optionData[0]) || !is_numeric($optionData[1]))
+							$this->reportUserHackTry('bad option_value ids data');
+
+						$id_attribute_group = (int)$optionData[0];
+						$id_attribute = (int)$optionData[1];
+
+						if($id_attribute_group == 0 || $id_attribute == 0)
+							$this->reportUserHackTry('bad option_value id to int data');
+						array_push($options, [$id_attribute_group, $id_attribute]);
+					}
+					$sql = new DbQuery();
+					$sql->select('price');
+					$sql->from('product_shop');
+					$sql->where('id_product = '.$id_product);
+					$sql->where('id_shop = '.$id_shop);
+					$product = Db::getInstance()->getRow($sql);
+					$product_price = (float)$product['price'];
+					
+					$query = 'SELECT reduction, reduction_type FROM `'._DB_PREFIX_.'specific_price` WHERE id_product=:id_product AND `from` < NOW() AND `to` > NOW()';
+					$stmt = $dbPrestashop->prepare($query);
+					$stmt->execute(array(':id_product' => $id_product));
+					foreach ($stmt->fetchAll() as $to_apply) {
+						$reduction_type = (string)$to_apply['reduction_type'];
+						$reduction = (float)$to_apply['reduction'];
+						if($reduction_type == 'percentage') {
+							$product_price -= $reduction * $product_price;
+						}
+						else {
+							$product_price -= $reduction;
+						}
+					}
+					
+					
+					$has_options = false;
+					foreach ($options as $option){
+						$id_attribute_group = (int)$option[0];
+						$id_attribute = (int)$option[1];
+						
+						//protect against empty options
+						$sql = new DbQuery();
+						$sql->select('id_product');
+						$sql->from('c3_product_option_value');
+						$sql->where('id_product = '.$id_product);
+						$sql->where('id_attribute = '.$id_attribute);
+						$sql->where('id_attribute_group = '.$id_attribute_group);
+						$option_value = Db::getInstance()->getRow($sql);
+						$id_product_check += (int)$option_value['id_product'];
+						if($id_product_check > 0)
+							$has_options = true;
+						
+						$sql = new DbQuery();
+						$sql->select('price');
+						$sql->from('c3_product_option_value');
+						$sql->where('id_product = '.$id_product);
+						$sql->where('id_attribute = '.$id_attribute);
+						$sql->where('id_attribute_group = '.$id_attribute_group);
+						$option_value = Db::getInstance()->getRow($sql);
+						$product_price += (float)$option_value['price'];
+					}
+					
+					if(($product_price > 0 && $has_options) || ($product_price > 0 && !$has_options))
+						$res['available'] = 1;
+				}
 			}
 		}
-
-		/*if($id_combination > 0 && $combination_data == ""){//simple product
+		
+		
+		/*
+		if($id_combination > 0 && $combination_data == ""){//simple product
 			$res['msg'] = 'normal product';
 
 			$sql = 'SELECT quantity FROM `'._DB_PREFIX_.'c3_product_option_combination_stock_available` 
@@ -141,13 +222,16 @@ class C3ProductOptionsChecksModuleFrontController extends ModuleFrontController 
 				}
 					
 			}
-		}*/
+		}
+		*/
 
 
 		return Tools::jsonEncode($res);
 	}
 	public function reportUserHackTry($details) {
 		//log user hack
+		$res['available'] = 0;
+		return Tools::jsonEncode($res);
 	}
 
 }

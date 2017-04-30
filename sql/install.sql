@@ -80,6 +80,8 @@ CREATE OR REPLACE VIEW `PREFIX_vc3_product_min_option_prices` AS SELECT
  pov.id_product AS id_product, pov.id_attribute_group AS id_attribute_group, MIN(pov.price) AS price
  FROM 
  PREFIX_c3_product_option_value AS pov
+ INNER JOIN PREFIX_product_shop AS ps ON (ps.id_product = pov.id_product)
+ WHERE ((ps.price > 0 AND pov.price = 0) OR (ps.price = 0 AND pov.price > 0))
  GROUP BY id_product, pov.id_attribute_group
  ;
 CREATE OR REPLACE VIEW `PREFIX_vc3_product_min_option_price` AS SELECT 

@@ -214,6 +214,7 @@ class Product extends ProductCore
 			$sql->from('c3_product_option', 'po');
 			$sql->select('po.id_attribute_group, MAX(pov.price) AS min_price');
 			$sql->innerJoin('c3_product_option_value', 'pov', 'pov.id_product = po.id_product AND pov.id_attribute_group = po.id_attribute_group');
+			$sql->where('po.id_product = '.$id_product);
 			$sql->where('po.required_option = '.true);
 			$sql->groupBy('po.id_attribute_group');
 			$min_options = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
