@@ -87,6 +87,20 @@ class C3Module
     public static function removeModuleCacheDir($moduleName)
     {
         // delete custom cache dir
+	self::removeModuleCacheFiles($moduleName);
+        $dir = self::getModuleCachePath($moduleName);
+        //delete dir
+        rmdir($dir);
+        return true;//success
+    }
+
+    /*
+    * remove the module's cache directory
+    * return true if no error, or else if something went wrong
+    */
+    public static function removeModuleCacheFiles($moduleName)
+    {
+        // delete custom cache dir
         $dir = self::getModuleCachePath($moduleName);
         if (is_dir($dir)){
             //empty dir of content
@@ -96,8 +110,6 @@ class C3Module
                         unlink($dir."/".$object);
             reset($objects);
         }
-        //delete dir
-        rmdir($dir);
         return true;//success
     }
 
@@ -114,6 +126,15 @@ class C3Module
         return true;//success
     }
 
+    /*
+    * delete given file if exists
+    */
+    public static function deleteFile($file)
+    {
+        // delete file if exists
+	if(file_exists($file))
+		unlink($file);
+    }
 
 }
 

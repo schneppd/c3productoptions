@@ -1,12 +1,12 @@
 {
   "name": "Schnepp David/c3productoptions",
   "description": "C3 module for custom product options",
-  "homepage": "https://github.com/equilibrium-d/personal.dev.c3-productoptions",
+  "homepage": "www",
   "license": "GNU GENERAL PUBLIC LICENSE v 3.0 (GPL 3.0)",
   "authors": [
     {
       "name": "Schnepp David",
-      "email": "s.dav.dev@gmail.com"
+      "email": "schnepp.david@gmail.com"
     }
   ],
   "require": {

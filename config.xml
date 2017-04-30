@@ -2,7 +2,7 @@
 <module>
 	<name>c3productoptions</name>
 	<displayName><![CDATA[C3 product options module]]></displayName>
-	<version><![CDATA[1.0.0]]></version>
+	<version><![CDATA[1.0.5]]></version>
 	<description><![CDATA[Adds C3's custom product option logic.]]></description>
 	<author><![CDATA[Schnepp David]]></author>
 	<tab><![CDATA[front_office_features]]></tab>
