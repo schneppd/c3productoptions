@@ -1348,7 +1348,7 @@ class C3ProductOptions extends Module
 		$dbPrestashop = new PDO('mysql:host='._DB_SERVER_.';dbname='._DB_NAME_, _DB_USER_, _DB_PASSWD_, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8'"));
 		
 		if($db_name == 'Product') {
-			$query = 'SELECT id_product, id_product_prestashop FROM vProductToDelete';
+			$query = 'SELECT id_product, id_product_prestashop FROM vProductToDelete LIMIT 50';
 			
 			foreach ($dbModule->query($query) as $to_create) {
 				$id_product = (int)$to_create['id_product'];
@@ -1377,6 +1377,15 @@ class C3ProductOptions extends Module
 				$result = $stmt->execute();
 				
 			}
+			
+			$query = 'SELECT COUNT(*) AS nb_remaining FROM vProductToDelete';
+			$nb_remaining = 0;
+			foreach ($dbModule->query($query) as $dt_r) {
+				$nb_remaining = (int)$dt_r['nb_remaining'];
+			}
+			
+			if($nb_remaining > 0)
+				$result_txt = " $nb_remaining products remaining, must repeat action[$id_action]";
 		}
 		else if($db_name == 'ProductOption') {
 			
