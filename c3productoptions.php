@@ -817,7 +817,7 @@ class C3ProductOptions extends Module
 
 			foreach ($dbModule->query($query) as $to_create) {
 				$id_app = (int)$to_create['id_option_value'];
-				$name_data = $to_create['name'];
+				$name_data = $this->LimitStringLength($to_create['name'], 127);
 				$id_lang = (int)$to_create['id_lang'];
 				$id_option = (int)$to_create['id_option'];
 				$id_option_ext = (int)$to_create['id_option_ext'];
