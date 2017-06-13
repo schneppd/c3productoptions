@@ -1349,7 +1349,10 @@ class C3ProductOptions extends Module
 		
 		if($db_name == 'Product') {
 			$query = 'SELECT id_product, id_product_prestashop FROM vProductToDelete LIMIT 50';
+<<<<<<< HEAD
 
+=======
+>>>>>>> 809c14d16af5e9a1e9401d3581d37473f7fb4036
 			
 			foreach ($dbModule->query($query) as $to_create) {
 				$id_product = (int)$to_create['id_product'];
@@ -1378,7 +1381,10 @@ class C3ProductOptions extends Module
 				$result = $stmt->execute();
 				
 			}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 809c14d16af5e9a1e9401d3581d37473f7fb4036
 			
 			$query = 'SELECT COUNT(*) AS nb_remaining FROM vProductToDelete';
 			$nb_remaining = 0;
@@ -1388,7 +1394,10 @@ class C3ProductOptions extends Module
 			
 			if($nb_remaining > 0)
 				$result_txt = " $nb_remaining products remaining, must repeat action[$id_action]";
+<<<<<<< HEAD
 
+=======
+>>>>>>> 809c14d16af5e9a1e9401d3581d37473f7fb4036
 		}
 		else if($db_name == 'ProductOption') {
 			
