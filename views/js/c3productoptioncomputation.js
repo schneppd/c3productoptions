@@ -102,11 +102,14 @@ function C3_processProductOptionData(){
 			var quantityAvailableCap = 500;
 			if (quantityAvailable > 0)
 				quantityAvailableCap = quantityAvailable;
+<<<<<<< HEAD
 			
 			if (!isNaN(currentVal) && currentVal < quantityAvailableCap)
 				$('#quantity_wanted').val(currentVal + 1);
 			else
 				$('#quantity_wanted').val(quantityAvailableCap);
+=======
+>>>>>>> 8c5070a3eda62db831936abc8f4ac9308237c729
 
 			C3_productOptionSelectionChanged();
 		});
@@ -115,11 +118,14 @@ function C3_processProductOptionData(){
 			e.preventDefault();//prevent default theme computations
 			fieldName = $(this).data('field-qty');
 			var currentVal = parseInt($('#quantity_wanted').val());
+<<<<<<< HEAD
 			
 			if (!isNaN(currentVal) && currentVal > 1)
 				$('#quantity_wanted').val(currentVal - 1).trigger('keyup');
 			else
 				$('#quantity_wanted').val(1);
+=======
+>>>>>>> 8c5070a3eda62db831936abc8f4ac9308237c729
 
 			C3_productOptionSelectionChanged();
 		});

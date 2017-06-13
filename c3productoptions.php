@@ -773,7 +773,7 @@ class C3ProductOptions extends Module
 			
 			foreach ($dbModule->query($query) as $to_create) {
 				$id_app = (int)$to_create['id_option'];
-				$name_data = $to_create['name'];
+				$name_data = $this->LimitStringLength((string)$to_create['name'], 127);
 				$id_lang = (int)$to_create['id_lang'];
 				$option_type = (int)$to_create['option_type'];
 				
@@ -1349,6 +1349,7 @@ class C3ProductOptions extends Module
 		
 		if($db_name == 'Product') {
 			$query = 'SELECT id_product, id_product_prestashop FROM vProductToDelete LIMIT 50';
+
 			
 			foreach ($dbModule->query($query) as $to_create) {
 				$id_product = (int)$to_create['id_product'];
@@ -1377,6 +1378,7 @@ class C3ProductOptions extends Module
 				$result = $stmt->execute();
 				
 			}
+
 			
 			$query = 'SELECT COUNT(*) AS nb_remaining FROM vProductToDelete';
 			$nb_remaining = 0;
@@ -1386,6 +1388,7 @@ class C3ProductOptions extends Module
 			
 			if($nb_remaining > 0)
 				$result_txt = " $nb_remaining products remaining, must repeat action[$id_action]";
+
 		}
 		else if($db_name == 'ProductOption') {
 			
